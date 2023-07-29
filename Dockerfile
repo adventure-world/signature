@@ -1,0 +1,19 @@
+ARG ver=16.8.0
+FROM node:$ver
+ARG NODE_ENV
+ARG PORT
+ARG IMAGE_DIR
+
+WORKDIR /app
+
+COPY . .
+
+RUN npm cache clear --force
+RUN npm install
+RUN npm run build
+
+ENV NODE_ENV=$NODE_ENV
+ENV PORT=$PORT
+ENV IMAGE_DIR=$IMAGE_DIR
+
+EXPOSE $PORT

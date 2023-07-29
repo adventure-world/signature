@@ -1,0 +1,3 @@
+[submodule "server/model"]
+path = server/model
+url=git@github.com:chainbow/dagen_model.git

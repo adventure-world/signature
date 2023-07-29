@@ -1,0 +1,16 @@
+{
+  "extends": "@quasar/app-webpack/tsconfig-preset",
+  "compilerOptions": {
+    "target": "es2017",
+    "noImplicitAny": false,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "types": ["jest", "node"],
+    "typeRoots": ["src/*", "node_modules/@types"],
+    "baseUrl": "."
+  },
+  "exclude": ["server"],
+  "include": ["src", "core", "src-electron", "tests", "common/bignumber-units.ts", "common/defines.ts"]
+}

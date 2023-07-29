@@ -1,0 +1,137 @@
+version: '3'
+services:
+  dagen-admin:
+    image: dagen_admin_image:latest
+    depends_on:
+      - dagen-db
+      - dagen-redis
+    build:
+      context: ./
+      args:
+        - NODE_ENV=${NODE_ENV}
+        - PORT=${PORT}
+    container_name: dagen-admin-web
+    restart: always
+    environment:
+      VIRTUAL_HOST: ${DOMAIN}
+      VIRTUAL_PORT: ${PORT}
+      LETSENCRYPT_HOST: ${DOMAIN}
+      LETSENCRYPT_EMAIL: lilong@chainbow.io
+    ports:
+      - '${PORT}:${PORT}'
+    working_dir: /app
+    command:
+      - sh
+      - -c
+      - |
+        ./node_modules/.bin/gulp start
+    volumes:
+      - ./logs_server:/app/logs
+      - ./statics:/app/statics
+    networks:
+      - shared
+    env_file: ./${ENV_PATH}/.env
+
+  dagen-daemon-eth:
+    image: dagen_admin_image:latest
+    depends_on:
+      - dagen-db
+      - dagen-redis
+    container_name: dagen-daemon-eth
+    restart: always
+    environment:
+      CHAIN_ID: 1
+    working_dir: /app
+    volumes:
+      - ./logs_daemon_eth:/app/logs
+      - ./statics:/app/statics
+    command: ./node_modules/.bin/gulp start_daemon
+    networks:
+      - shared
+    env_file: ./${ENV_PATH}/.env
+
+  dagen-redis:
+    image: 'redis:5.0.3'
+    container_name: dagen-redis
+    ports:
+      - '6579:6379'
+    networks:
+      - shared
+    volumes:
+      - ./redis.conf:/etc/redis/redis.conf
+      - ./data/redis:/data
+    command: redis-server /etc/redis/redis.conf
+
+  dagen-db:
+    image: mongo:4.2.5-bionic
+    container_name: dagen-db
+    restart: always
+    environment:
+      - MONGO_INITDB_DATABASE=dagen
+      - MONGO_INITDB_ROOT_USERNAME=dagen
+      - MONGO_INITDB_ROOT_PASSWORD=dagen_password
+    ports:
+      - '27717:27017'
+    volumes:
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+      - ./rs/key:/key
+      - ./data/db:/data/db
+    entrypoint:
+      [
+        '/usr/bin/mongod',
+        '--keyFile',
+        '/key',
+        '--bind_ip_all',
+        '--replSet',
+        'dbrs'
+      ]
+    networks:
+      - shared
+
+  dagen-db-rs1:
+    container_name: dagen-db-rs1
+    image: mongo:4.2.5-bionic
+    ports:
+      - 27718:27017
+    volumes:
+      - ./rs/key:/key
+      - ./data/db1:/data/db
+    restart: always
+    entrypoint:
+      [
+        '/usr/bin/mongod',
+        '--keyFile',
+        '/key',
+        '--bind_ip_all',
+        '--replSet',
+        'dbrs'
+      ]
+    networks:
+      - shared
+
+  dagen-db-rs2:
+    container_name: dagen-db-rs2
+    image: mongo:4.2.5-bionic
+    ports:
+      - 27719:27017
+    volumes:
+      - ./rs/key:/key
+      - ./data/db2:/data/db
+    restart: always
+    entrypoint:
+      [
+        '/usr/bin/mongod',
+        '--keyFile',
+        '/key',
+        '--bind_ip_all',
+        '--replSet',
+        'dbrs'
+      ]
+    networks:
+      - shared
+
+networks:
+  shared:
+    external: true
+  dagen-admin-net:
+    driver: bridge
