@@ -14,17 +14,15 @@ export const serverSignature = () => [
     const address = req.query.address ?? '0x23BCF3B718127AeDCae9ad691BcEB03238cae8b3'
     const signer = new Wallet(privateKey)
     const amount = 100
-    // const timeout = Math.floor(Date.now() + (5 * 60) / 1000)
-    const timeout = 5
+    const timeout = Math.floor(Date.now() + (5 * 60) / 1000)
     const nonce = 1
-    const orderNo = 'order'
     const messageHash = ethers.utils.solidityKeccak256(
-      ['address', 'uint256', 'uint256', 'uint256', 'string'],
-      [address, amount, timeout, nonce, orderNo],
+      ['address', 'uint256', 'uint256', 'uint256'],
+      [address, amount, timeout, nonce],
     )
     const messageBytes = ethers.utils.arrayify(messageHash)
     const signature = await signer.signMessage(messageBytes)
-    res.send({ success: true, result: signature })
+    res.send({ success: true, result: {signature,timeout,amount} })
   }),
 ]
 
@@ -32,16 +30,15 @@ export const verifySignature = () => [
   query('signature').isString(),
   asyncHandler(async (req, res) => {
     const signature = req.query.signature
-    const address = '0x23BCF3B718127AeDCae9ad691BcEB03238cae8b3'
+    const address = '0xF03438c619977995A7b526DbA1b6b2a1Fe870168'
 
     const amount = 100
     // const timeout = Math.floor(Date.now() + (5 * 60) / 1000)
     const timeout = 5
     const nonce = 1
-    const orderNo = 'order'
     const messageHash = ethers.utils.solidityKeccak256(
-      ['address', 'uint256', 'uint256', 'uint256', 'string'],
-      [address, amount, timeout, nonce, orderNo],
+      ['address', 'uint256', 'uint256', 'uint256'],
+      [address, amount, timeout, nonce],
     )
     const messageBytes = ethers.utils.arrayify(messageHash)
     const recoveredAddress = ethers.utils.verifyMessage(messageBytes, signature)
